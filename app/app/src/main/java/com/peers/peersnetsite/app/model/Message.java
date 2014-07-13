@@ -1,11 +1,14 @@
 package com.peers.peersnetsite.app.model;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
  * Created by ipinyol on 7/12/14.
  */
 public class Message {
+    public static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
     private String UUID;
     private String message;
     private String url;
@@ -60,5 +63,9 @@ public class Message {
 
     public void setFrom_Peer_UUID(String from_Peer_UUID) {
         this.from_Peer_UUID = from_Peer_UUID;
+    }
+
+    public String toString() {
+        return this.getMessage() + " : " + this.getDate();
     }
 }

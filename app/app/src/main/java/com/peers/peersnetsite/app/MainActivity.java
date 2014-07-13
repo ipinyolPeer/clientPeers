@@ -1,11 +1,13 @@
 package com.peers.peersnetsite.app;
 
+import android.app.Dialog;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,119 +18,93 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 
-public class MainActivity extends ActionBarActivity implements ActionBar.OnNavigationListener {
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
 
-    /**
-     * The serialization (saved instance state) Bundle key representing the
-     * current dropdown position.
-     */
-    private static final String STATE_SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
+import android.app.ListActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ArrayAdapter;
+
+import com.peers.peersnetsite.app.db.DBHelper;
+import com.peers.peersnetsite.app.db.MessageDataSource;
+import com.peers.peersnetsite.app.db.PeerDataSource;
+import com.peers.peersnetsite.app.model.Message;
+import com.peers.peersnetsite.app.model.Peer;
+
+import java.util.UUID;
+
+public class MainActivity extends ListActivity {
+    private MessageDataSource messageDS;
+    private PeerDataSource peerDS;
+    private Peer peer;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.i("my", DBHelper.tablePeerSQL);
+        Log.i("my",DBHelper.tableMessageSQL);
 
-        // Set up the action bar to show a dropdown list.
-        final ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+        peerDS = new PeerDataSource(this);
+        peerDS.open();
 
-        // Set up the dropdown list navigation in the action bar.
-        actionBar.setListNavigationCallbacks(
-                // Specify a SpinnerAdapter to populate the dropdown list.
-                new ArrayAdapter<String>(
-                        actionBar.getThemedContext(),
-                        android.R.layout.simple_list_item_1,
-                        android.R.id.text1,
-                        new String[] {
-                                getString(R.string.title_section1),
-                                getString(R.string.title_section2),
-                                getString(R.string.title_section3),
-                        }),
-                this);
+        messageDS = new MessageDataSource(this);
+        messageDS.open();
+
+        this.peer = peerDS.newPeer(UUID.randomUUID().toString(), false, "conan");
+        List<Peer> peers = peerDS.getAllPeers();
+        Log.i("my", "Name:" + peers.get(0).getName());
+        Log.i("my", "UUID:" + peers.get(0).getUUID());
+        List<Message> values = messageDS.getAllMessages();
+
+        List<String> aux = new ArrayList<String>();
+        for (Message m:values) {
+            //Peer paux = peerDS.getPeer(m.getFrom_Peer_UUID());
+            aux.add(m.getMessage() + "- " + m.getDate());
+        }
+        // use the SimpleCursorAdapter to show the
+        // elements in a ListView
+        ArrayAdapter<Message> adapter = new ArrayAdapter<Message>(this,
+                android.R.layout.simple_list_item_1, values);
+        setListAdapter(adapter);
+    }
+
+    // Will be called via the onClick attribute
+    // of the buttons in main.xml
+    public void onClick(View view) {
+        @SuppressWarnings("unchecked")
+        ArrayAdapter<Message> adapter = (ArrayAdapter<Message>) getListAdapter();
+        Message message = null;
+        switch (view.getId()) {
+            case R.id.add:
+                String[] comments = new String[] { "A Cool Message", "Very nice message",
+                        "I Hate this message man" };
+                int nextInt = new Random().nextInt(3);
+                // save the new comment to the database
+                Date date = new Date();
+                message= messageDS.newMessage(UUID.randomUUID().toString(), comments[nextInt],
+                        null, Message.dateFormat.format(date), null, peer.getUUID());
+                adapter.add(message);
+                break;
+        }
+        adapter.notifyDataSetChanged();
     }
 
     @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        // Restore the previously serialized current dropdown position.
-        if (savedInstanceState.containsKey(STATE_SELECTED_NAVIGATION_ITEM)) {
-            getSupportActionBar().setSelectedNavigationItem(
-                    savedInstanceState.getInt(STATE_SELECTED_NAVIGATION_ITEM));
-        }
+    protected void onResume() {
+        messageDS.open();
+        peerDS.open();
+        super.onResume();
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        // Serialize the current dropdown position.
-        outState.putInt(STATE_SELECTED_NAVIGATION_ITEM,
-                getSupportActionBar().getSelectedNavigationIndex());
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(int position, long id) {
-        // When the given dropdown item is selected, show its contents in the
-        // container view.
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
-                .commit();
-        return true;
-    }
-
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
-            return rootView;
-        }
+    protected void onPause() {
+        messageDS.close();
+        peerDS.close();
+        super.onPause();
     }
 
 }
