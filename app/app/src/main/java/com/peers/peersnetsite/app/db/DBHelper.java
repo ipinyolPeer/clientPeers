@@ -10,18 +10,36 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 
 public class DBHelper extends SQLiteOpenHelper{
-    private String tablePeer =  "CREATE TABLE peer(" +
-                                "uuid   TEXT PRIMARY KEY," +
-                                "isSelf INTEGER );";
 
-    private String tableMessage =   "CREATE TABLE message(" +
-                                    "uuid   TEXT PRIMARY KEY," +
-                                    "message TEXT," +
-                                    "url    TEXT," +
-                                    "referTo_Message_UUID TEXT," +
-                                    "from_Peer_UUID TEXT," +
-                                    "FOREIGN KEY(referTo_Message_UUID) REFERENCES tableMessage(uuid)," +
-                                    "FOREIGN KEY(from_Peer_UUID) REFERENCES peer(uuid));";
+    public  static final String TABLE_PEER = "peer";
+    public  static final String COL_PEER_UUID = "uuid";
+    public  static final String COL_PEER_ISSELF = "isSelf";
+    public  static final String COL_PEER_NAME = "name";
+
+    public  static final String TABLE_MESSAGE = "message";
+    public  static final String COL_MESSAGE_UUID = "uuid";
+    public  static final String COL_MESSAGE_MESSAGE = "message";
+    public  static final String COL_MESSAGE_URL = "url";
+    public  static final String COL_MESSAGE_REFERTO = "referTo_Message_UUID";
+    public  static final String COL_MESSAGE_FROMPEER = "from_Peer_UUID";
+
+    private static final String tablePeer =
+                                "CREATE TABLE " + TABLE_PEER + "(" +
+                                COL_PEER_UUID + " TEXT PRIMARY KEY," +
+                                COL_PEER_ISSELF + " INTEGER," +
+                                COL_PEER_NAME + " TEXT);";
+
+    private static final String tableMessage =
+                                "CREATE TABLE " + TABLE_MESSAGE + "(" +
+                                COL_MESSAGE_UUID + " TEXT PRIMARY KEY," +
+                                COL_MESSAGE_MESSAGE + " TEXT," +
+                                COL_MESSAGE_URL +" TEXT," +
+                                COL_MESSAGE_REFERTO + " TEXT," +
+                                COL_MESSAGE_FROMPEER + " TEXT," +
+                                "FOREIGN KEY(" + COL_MESSAGE_REFERTO+ ") " +
+                                    "REFERENCES " + TABLE_MESSAGE+ "(" + COL_MESSAGE_UUID +")," +
+                                "FOREIGN KEY(" + COL_MESSAGE_REFERTO + ")" +
+                                    " REFERENCES " + TABLE_PEER + "(" + COL_PEER_UUID+ "));";
 
     private String sqlCreate = tablePeer + tableMessage;
     public DBHelper(Context context, String name,
