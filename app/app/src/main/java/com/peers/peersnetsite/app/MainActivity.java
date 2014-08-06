@@ -33,6 +33,7 @@ import com.peers.peersnetsite.app.db.MessageDataSource;
 import com.peers.peersnetsite.app.db.PeerDataSource;
 import com.peers.peersnetsite.app.model.Message;
 import com.peers.peersnetsite.app.model.Peer;
+import android.content.Intent;
 
 import java.util.UUID;
 
@@ -76,6 +77,7 @@ public class MainActivity extends ListActivity {
     // of the buttons in main.xml
     public void onClick(View view) {
         @SuppressWarnings("unchecked")
+        /*
         ArrayAdapter<Message> adapter = (ArrayAdapter<Message>) getListAdapter();
         Message message = null;
         switch (view.getId()) {
@@ -91,6 +93,9 @@ public class MainActivity extends ListActivity {
                 break;
         }
         adapter.notifyDataSetChanged();
+        */
+        Intent intent = new Intent(this, PostActivity.class);
+        startActivity(intent);
     }
 
     @Override
